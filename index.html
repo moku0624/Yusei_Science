@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>高校受験 中学理科 総復習マスター</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#1f2937;--muted:#6b7280;--pri:#2563eb;--bd:#dbe3ee;--ok:#15803d;--ng:#b91c1c;--warn:#b45309}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif}
+.app{max-width:840px;margin:auto;padding:18px}
+h1{font-size:1.5rem;margin:0 0 8px} h2,h3{margin-bottom:8px}
+.sub,.small{color:var(--muted);font-size:.88rem;line-height:1.6}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px rgba(0,0,0,.04)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:.84rem;color:var(--muted);margin-bottom:5px}
+select,button{font:inherit} select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:9px;background:#fff}
+button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}
+.primary{width:100%;margin-top:14px;background:var(--pri);color:white}
+.hidden{display:none!important}
+.goalBox{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}
+.goalStat{border:1px solid var(--bd);background:#f8fafc;border-radius:11px;padding:12px;text-align:center}
+.goalStat b{display:block;font-size:1.5rem;margin-top:3px}
+.goalStat.warn b{color:var(--warn)} .goalStat.ok b{color:var(--ok)}
+.unitBox{border:1px solid var(--bd);border-radius:10px;padding:10px;max-height:280px;overflow:auto;background:#fafcff}
+.unitItem{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px}
+.unitItem:hover{background:#eef4ff}
+.unitItem input{width:18px;height:18px}
+.unitActions{display:flex;gap:8px;margin-top:8px}
+.unitActions button{background:#eef2ff;color:#3730a3;font-size:.82rem;padding:8px 10px}
+.countNote{font-size:.8rem;color:#6b7280;margin-left:auto}
+.progresswrap{height:9px;background:#e5e7eb;border-radius:99px;overflow:hidden}
+.progress{height:100%;background:var(--pri);width:0;transition:.2s}
+.meta{display:flex;justify-content:space-between;color:var(--muted);font-size:.85rem;margin:10px 0}
+.badges{display:flex;gap:7px;flex-wrap:wrap}
+.badge{background:#eef2ff;color:#3730a3;border-radius:99px;padding:4px 8px;font-size:.78rem;font-weight:700}
+.badge.retry{background:#fff7ed;color:#9a3412}
+.question{font-size:1.17rem;font-weight:700;line-height:1.7;margin:14px 0;white-space:pre-line}
+.options{display:grid;gap:10px}
+.option{text-align:left;background:white;border:2px solid var(--bd);color:var(--text);line-height:1.5}
+.option:hover:not(:disabled){background:#f0f7ff;border-color:#93c5fd}
+.option.correct{border-color:#22c55e;background:#f0fdf4;color:#166534}
+.option.wrong{border-color:#ef4444;background:#fef2f2;color:#991b1b}
+.explain{margin-top:14px;padding:14px;background:#f8fafc;border-left:4px solid var(--pri);border-radius:8px;line-height:1.65}
+.next{width:100%;margin-top:14px;background:#111827;color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:#f8fafc;padding:10px;border-radius:10px;text-align:center}
+.stat b{display:block;font-size:1.3rem}
+.review{border-top:1px solid var(--bd);padding:10px 0;line-height:1.5}
+.warnTxt{color:var(--warn);font-weight:700;margin-left:6px}
+.priorityNote{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;color:#9a3412;font-size:.88rem;line-height:1.55}
+@media(max-width:620px){.grid,.stats,.goalBox{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>高校受験 中学理科 総復習マスター</h1>
+<p class="sub">中学理科4分野の重要ポイントを、知識・計算・実験・資料判断・理由説明を組み合わせて総復習。不正解は正解するまで再出題し、次回は一発目で間違えた問題を優先します。</p>
+
+<div id="setup" class="card">
+  <h3 style="margin-top:0">一発正解の進捗</h3>
+  <div class="goalBox">
+    <div class="goalStat ok">一発正解クリア<b id="clearedCount">0</b><span class="small">/ 有効問題</span></div>
+    <div class="goalStat warn">一発正解 未クリア<b id="unclearedCount">404</b><span class="small">未挑戦を含む</span></div>
+    <div class="goalStat warn">次回優先<b id="priorityCount">0</b><span class="small">前回一発NG</span></div>
+  </div>
+  <div id="priorityNote" class="priorityNote hidden"></div>
+
+  <div id="dataStatus" class="small" style="margin:8px 0 14px"></div>
+
+  <div class="grid">
+    <div>
+      <label>分野</label>
+      <select id="field">
+        <option value="物理">物理</option>
+        <option value="化学">化学</option>
+        <option value="生物">生物</option>
+        <option value="地学">地学</option>
+      </select>
+    </div>
+    <div>
+      <label>新規出題数</label>
+      <select id="count">
+        <option value="10">10問</option>
+        <option value="20">20問</option>
+        <option value="30">30問</option>
+        <option value="50">50問</option>
+        <option value="all">選択単元の全問</option>
+      </select>
+    </div>
+    <div style="grid-column:1/-1">
+      <label>単元（複数選択可）</label>
+      <div id="units" class="unitBox"></div>
+      <div class="unitActions">
+        <button id="allUnits" type="button">すべて選択</button>
+        <button id="clearUnits" type="button">すべて解除</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="start" class="primary">学習を開始</button>
+  <button id="resetHistory" type="button" style="width:100%;margin-top:10px;background:#fff;color:#b91c1c;border:1px solid #fecaca;">回答履歴をリセット</button>
+  <p class="small">※「新規出題数」は最初に選ぶ問題数です。不正解した問題の再出題分は追加されます。</p>
+</div>
+
+<div id="quiz" class="hidden"><div class="card">
+  <div class="progresswrap"><div id="prog" class="progress"></div></div>
+  <div class="meta"><span id="counter"></span><span id="scoreNow"></span></div>
+  <div class="badges">
+    <span id="fb" class="badge"></span>
+    <span id="ub" class="badge"></span>
+    <span id="typeBadge" class="badge"></span>
+    <span id="retryBadge" class="badge retry hidden">再挑戦</span>
+  </div>
+  <div id="question" class="question"></div>
+  <div id="options" class="options"></div>
+  <div id="explain" class="explain hidden"></div>
+  <button id="next" class="next hidden">次の問題へ</button>
+</div></div>
+
+<div id="result" class="card hidden">
+  <h2 style="text-align:center">演習結果</h2>
+  <div class="stats">
+    <div class="stat">一発正解<b id="firstCorrect"></b></div>
+    <div class="stat">最終習得<b id="masteredResult"></b></div>
+    <div class="stat">回答回数<b id="attemptResult"></b></div>
+  </div>
+  <div id="unitStats"></div>
+  <div id="review"></div>
+  <button class="primary" onclick="location.reload()">次のトライへ</button>
+</div>
+
+<script src="./data/science-questions.js"></script>
+<script>
+const DATA=window.SCIENCE_QUESTIONS || [];
+const $=id=>document.getElementById(id);
+
+if (!Array.isArray(DATA) || DATA.length === 0) {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.innerHTML = `
+      <div style="max-width:720px;margin:40px auto;padding:20px;font-family:sans-serif">
+        <h2>問題データを読み込めませんでした</h2>
+        <p><code>data/science-questions.js</code> を <code>index.html</code> から見える <code>data</code> フォルダ内に置いてください。</p>
+      </div>`;
+  });
+}
+
+function validateQuestion(q){
+  const errors=[];
+  if(!q.q || !String(q.q).trim()) errors.push("問題文が空");
+  if(!Array.isArray(q.options) || q.options.length!==4) errors.push("選択肢が4つではない");
+  if(Array.isArray(q.options)){
+    if(q.options.some(x=>!String(x).trim())) errors.push("空の選択肢");
+    if(new Set(q.options).size!==q.options.length) errors.push("選択肢の重複");
+    if(!q.options.includes(q.answer)) errors.push("正解が選択肢にない");
+  }
+  if(!q.exp || !String(q.exp).trim()) errors.push("解説が空");
+  if(!q.field || !q.unit) errors.push("分野・単元が未設定");
+  return errors;
+}
+const seenQuestionIds=new Set();
+const VALID_DATA=[];
+const INVALID_DATA=[];
+DATA.forEach(q=>{
+  const errors=validateQuestion(q);
+  if(seenQuestionIds.has(q.id)) errors.push("ID重複");
+  seenQuestionIds.add(q.id);
+  if(errors.length) INVALID_DATA.push({...q,errors}); else VALID_DATA.push(q);
+});
+
+
+const KEY_CLEAR='science_firstshot_cleared_v2';
+const KEY_PRIORITY='science_firstshot_priority_v2';
+
+const loadSet=key=>new Set(JSON.parse(localStorage.getItem(key)||'[]'));
+const saveSet=(key,s)=>localStorage.setItem(key,JSON.stringify([...s]));
+
+let cleared=loadSet(KEY_CLEAR);
+let priority=loadSet(KEY_PRIORITY);
+
+let queue=[];
+let originalIds=[];
+let uniqueTotal=0;
+let mastered=new Set();
+let firstSeen=new Set();
+let firstCorrectIds=new Set();
+let firstWrongIds=new Set();
+let attemptsById={};
+let answerCount=0;
+let current=null;
+let answered=false;
+
+function sh(a){
+  a=[...a];
+  for(let i=a.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function updateDashboard(){
+  const ds=$('dataStatus');
+  if(INVALID_DATA.length){ ds.textContent=`登録${DATA.length}問／有効${VALID_DATA.length}問／要修正${INVALID_DATA.length}問（要修正問題は出題対象外）`; ds.classList.add('warnTxt'); console.warn('問題データの不備',INVALID_DATA); }
+  else { ds.textContent=`登録${DATA.length}問／有効${VALID_DATA.length}問／要修正0問　全問題が出題可能です。`; }
+  $('clearedCount').textContent=cleared.size;
+  $('unclearedCount').textContent=VALID_DATA.length-cleared.size;
+  $('priorityCount').textContent=priority.size;
+
+  if(priority.size){
+    $('priorityNote').classList.remove('hidden');
+    $('priorityNote').textContent=`前回までに一発目で間違えた ${priority.size} 問を、選択した分野・単元の範囲内で優先して出題します。再挑戦で正解しても、この優先対象は次回の最初の回答で正解するまで残ります。`;
+  } else {
+    $('priorityNote').classList.add('hidden');
+  }
+}
+
+function renderUnits(){
+  const f=$('field').value;
+  const units=[...new Set(VALID_DATA.filter(q=>q.field===f).map(q=>q.unit))]
+    .sort((a,b)=>a.localeCompare(b,'ja',{numeric:true}));
+
+  $('units').innerHTML=units.map(u=>{
+    const all=VALID_DATA.filter(q=>q.field===f&&q.unit===u);
+    const pri=all.filter(q=>priority.has(q.id)).length;
+    const un=all.filter(q=>!cleared.has(q.id)).length;
+    return `<label class="unitItem">
+      <input class="unitCheck" type="checkbox" value="${u}" checked>
+      <span>${u}</span>
+      <span class="countNote">${all.length}問 / 未クリア${un}${pri?` / 優先${pri}`:''}</span>
+    </label>`;
+  }).join('');
+}
+
+function selectedUnits(){
+  return [...document.querySelectorAll('.unitCheck:checked')].map(x=>x.value);
+}
+
+$('field').addEventListener('change',renderUnits);
+$('allUnits').onclick=()=>document.querySelectorAll('.unitCheck').forEach(x=>x.checked=true);
+$('clearUnits').onclick=()=>document.querySelectorAll('.unitCheck').forEach(x=>x.checked=false);
+
+$('resetHistory').onclick=()=>{
+  const ok=confirm('これまでの一発正解・優先出題などの回答履歴をすべてリセットします。よろしいですか？');
+  if(!ok) return;
+
+  localStorage.removeItem(KEY_CLEAR);
+  localStorage.removeItem(KEY_PRIORITY);
+
+  cleared=new Set();
+  priority=new Set();
+
+  updateDashboard();
+  renderUnits();
+
+  alert('回答履歴をリセットしました。');
+};
+
+$('start').onclick=()=>{
+  const f=$('field').value;
+  const us=selectedUnits();
+
+  if(!us.length){
+    alert('少なくとも1つの単元を選択してください。');
+    return;
+  }
+
+  let candidates=VALID_DATA.filter(q=>q.field===f&&us.includes(q.unit));
+
+  // 優先順位
+  // 1. 前回一発目で間違えた
+  // 2. まだ一発正解クリアしていない（未挑戦含む）
+  // 3. 一発正解クリア済み
+  const p1=sh(candidates.filter(q=>priority.has(q.id)));
+  const p2=sh(candidates.filter(q=>!priority.has(q.id)&&!cleared.has(q.id)));
+  const p3=sh(candidates.filter(q=>cleared.has(q.id)));
+
+  let ordered=[...p1,...p2,...p3];
+
+  const n=$('count').value;
+  if(n!=='all'){
+    ordered=ordered.slice(0,Math.min(Number(n),ordered.length));
+  }
+
+  queue=[...ordered];
+  originalIds=ordered.map(q=>q.id);
+  uniqueTotal=ordered.length;
+  mastered=new Set();
+  firstSeen=new Set();
+  firstCorrectIds=new Set();
+  firstWrongIds=new Set();
+  attemptsById={};
+  answerCount=0;
+
+  $('setup').classList.add('hidden');
+  $('result').classList.add('hidden');
+  $('quiz').classList.remove('hidden');
+
+  nextQuestion();
+};
+
+function nextQuestion(){
+  if(queue.length===0){
+    finish();
+    return;
+  }
+
+  current=queue.shift();
+  answered=false;
+
+  attemptsById[current.id]=(attemptsById[current.id]||0)+1;
+  const isRetry=attemptsById[current.id]>1;
+
+  $('retryBadge').classList.toggle('hidden',!isRetry);
+  $('fb').textContent=current.field;
+  $('ub').textContent=current.unit;
+  $('typeBadge').textContent=current.qtype||'確認';
+  $('question').textContent=current.q;
+  $('options').innerHTML='';
+  $('explain').classList.add('hidden');
+  $('next').classList.add('hidden');
+
+  $('prog').style.width=`${uniqueTotal?mastered.size/uniqueTotal*100:0}%`;
+  $('counter').textContent=`習得 ${mastered.size} / ${uniqueTotal}問`;
+  $('scoreNow').textContent=`回答 ${answerCount}回`;
+
+  sh(current.options).forEach(o=>{
+    const b=document.createElement('button');
+    b.className='option';
+    b.textContent=o;
+    b.onclick=()=>check(o,b);
+    $('options').appendChild(b);
+  });
+}
+
+function scheduleRetry(q){
+  // 3～6問後を目安に再出題
+  const gap=Math.min(queue.length,3+Math.floor(Math.random()*4));
+  queue.splice(gap,0,q);
+}
+
+function check(choice,btn){
+  if(answered)return;
+  answered=true;
+  answerCount++;
+
+  const q=current;
+  const isFirst=!firstSeen.has(q.id);
+  if(isFirst) firstSeen.add(q.id);
+
+  const ok=choice===q.answer;
+
+  if(ok){
+    btn.classList.add('correct');
+    mastered.add(q.id);
+
+    if(isFirst){
+      firstCorrectIds.add(q.id);
+      priority.delete(q.id);
+      cleared.add(q.id);
+    }
+  } else {
+    btn.classList.add('wrong');
+
+    [...$('options').children].forEach(x=>{
+      if(x.textContent===q.answer)x.classList.add('correct');
+    });
+
+    if(isFirst){
+      firstWrongIds.add(q.id);
+      priority.add(q.id);
+      cleared.delete(q.id);
+    }
+
+    scheduleRetry(q);
+  }
+
+  saveSet(KEY_CLEAR,cleared);
+  saveSet(KEY_PRIORITY,priority);
+
+  [...$('options').children].forEach(x=>x.disabled=true);
+
+  let extra='';
+  if(ok && attemptsById[q.id]>1){
+    extra='<br><b>この演習内では習得しました。</b> ただし一発正解ではないため、次回も優先出題されます。';
+  }
+
+  $('explain').innerHTML=`<b>${ok?'○ 正解':'× 不正解'}</b><br>正解：${q.answer}<br>${q.exp}${extra}`;
+  $('explain').classList.remove('hidden');
+  $('next').classList.remove('hidden');
+  $('scoreNow').textContent=`回答 ${answerCount}回`;
+}
+
+$('next').onclick=nextQuestion;
+
+function finish(){
+  $('quiz').classList.add('hidden');
+  $('result').classList.remove('hidden');
+
+  $('firstCorrect').textContent=`${firstCorrectIds.size} / ${uniqueTotal}`;
+  $('masteredResult').textContent=`${mastered.size} / ${uniqueTotal}`;
+  $('attemptResult').textContent=answerCount;
+
+  const selected=VALID_DATA.filter(q=>originalIds.includes(q.id));
+  const unitNames=[...new Set(selected.map(q=>q.unit))]
+    .sort((a,b)=>a.localeCompare(b,'ja',{numeric:true}));
+
+  $('unitStats').innerHTML='<h3>単元別・一発正解</h3>'+
+    unitNames.map(u=>{
+      const ids=selected.filter(q=>q.unit===u).map(q=>q.id);
+      const c=ids.filter(id=>firstCorrectIds.has(id)).length;
+      const rate=Math.round(c/ids.length*100);
+      return `<div class="review"><b>${u}</b>：${c}/${ids.length}（${rate}%）${rate<100?'<span class="warnTxt">未達あり</span>':''}</div>`;
+    }).join('');
+
+  const missed=selected.filter(q=>firstWrongIds.has(q.id));
+
+  $('review').innerHTML='<h3>今回、一発正解できなかった問題</h3>'+
+    (missed.length
+      ? missed.map(q=>`<div class="review"><b>${q.unit}</b><br>${q.q}<br><span class="small">正解：${q.answer}</span><br>${q.exp}</div>`).join('')
+      : '<p>今回の出題はすべて一発正解です。</p>');
+
+  updateDashboard();
+}
+
+updateDashboard();
+renderUnits();
+
+console.assert(DATA.length>0);
+DATA.forEach(q=>{
+  console.assert(q.options.length===4,q.id);
+  console.assert(new Set(q.options).size===4,q.id);
+  console.assert(q.options.includes(q.answer),q.id);
+});
+</script>
+</div>
+</body>
+</html>
